@@ -1,0 +1,22 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Transcription {
+  id        String   @id @default(uuid())
+  content   String
+  type      String   // 'video' or 'audio'
+  fileName  String?
+  fileSize  Int?
+  duration  Float?   // Duration in seconds
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
