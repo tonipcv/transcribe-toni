@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
         file: await fileFromPath(audioPath),
         model: 'whisper-1',
       });
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     } catch (error: any) {
+    /* eslint-enable @typescript-eslint/no-explicit-any */
       console.error('Error transcribing audio:', error.message);
       if (error.status === 401) {
         throw new Error('Invalid or expired OpenAI API key. Please check your API key configuration.');

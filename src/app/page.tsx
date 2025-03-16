@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -13,8 +12,10 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [selectedOption, setSelectedOption] = useState<'initial' | 'video' | 'audio'>('initial');
+  const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -22,6 +23,26 @@ export default function Home() {
       setError('');
     }
   };
+
+  // Efeito para gerenciar o timer de gravação
+  useEffect(() => {
+    if (isRecording) {
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
@@ -44,6 +65,7 @@ export default function Home() {
 
       mediaRecorder.start();
       setIsRecording(true);
+      setRecordingTime(0);
     } catch (err) {
       console.error('Error accessing microphone:', err);
       setError('Error accessing microphone. Please make sure you have granted permission.');
@@ -54,10 +76,15 @@ export default function Home() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
   };
 
-  const handleAudioUpload = async () => {
+  const submitAudio = async () => {
     if (!audioBlob) {
       setError('No audio recording available');
       return;
